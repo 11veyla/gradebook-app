@@ -61,7 +61,7 @@ form .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.subject-list{dis
 <section id="settings" class="page">
  <h2>数据与设置</h2>
  <div class="card"><strong>备份资料</strong><p class="muted">资料保存在这台设备的浏览器中。建议定期导出 JSON 备份。</p><div class="actions"><button class="btn" onclick="exportJSON()">导出 JSON 备份</button><button class="btn secondary" onclick="exportCSV()">导出 CSV</button></div><label>导入 JSON 备份</label><input type="file" id="importFile" accept="application/json" onchange="importJSON(event)"></div>
- <div class="card"><strong>应用安装</strong><p class="muted">请先把网站部署到 HTTPS 网址，再用 Android Chrome 打开，选择「安装应用」或「添加到主屏幕」。</p><button class="btn secondary full" id="installBtn" hidden onclick="installApp()">安装到手机</button><p class="tiny muted" id="installHelp">若未出现安装按钮，可打开 Chrome 右上角菜单查看安装选项。</p></div>
+ <div class="card"><strong>应用安装</strong><p class="muted">请先把网站部署到 HTTPS 网址，再用 Android Chrome 打开，选择「安装应用」或「添加到主屏幕」。</p><button class="btn secondary full" id="installBtn" onclick="installApp()">安装到电脑／手机</button><p class="tiny muted" id="installHelp">若点击上方按钮没有弹出安装确认，请在 Chrome 右上角「⋮」菜单中选择「投放、保存和分享」→「安装页面为应用」（不同版本文字可能略有不同）；也可查看地址栏右侧的安装图标。</p></div>
  <div class="card"><strong>资料管理</strong><button class="btn danger full" onclick="clearAll()">清空本机所有记录</button></div>
 </section>
 <section id="editor" class="page">
@@ -149,7 +149,7 @@ function exportJSON(){let backup={app:'HIGH SCHOOL JOURNAL',version:2,exportedAt
 function exportCSV(){let rows=[['科目','类别','日期','获得分数','满分','得分率(%)','公布占比(%)','正式成绩','备注'],...data.map(r=>[r.subject,r.type,r.date,r.score,r.total,pct(r).toFixed(2),r.weight??'',r.official,r.note])];let csv='\ufeff'+rows.map(a=>a.map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');download('成绩记录.csv',csv,'text/csv;charset=utf-8');toast('CSV 已导出')}
 function importJSON(e){let f=e.target.files[0];if(!f)return;let rd=new FileReader();rd.onload=()=>{try{let x=JSON.parse(rd.result),grades,importedNotes;if(Array.isArray(x)){grades=x;importedNotes=[]}else if(x&&Array.isArray(x.grades)){grades=x.grades;importedNotes=Array.isArray(x.notes)?x.notes:[]}else throw Error('format');if(confirm('导入会覆盖本机现有成绩与笔记，确定继续？')){let oldG=data,oldN=notes;data=grades;notes=importedNotes;if(persist()){toast('成绩与笔记导入成功')}else{data=oldG;notes=oldN;persist()}}}catch{toast('文件格式不正确或不受支持')}e.target.value=''};rd.readAsText(f)}
 function clearAll(){if(confirm('确定清空本机所有成绩与笔记？建议先导出 JSON 备份。')){let oldG=data,oldN=notes;data=[];notes=[];if(persist())toast('本机成绩与笔记已清空');else{data=oldG;notes=oldN;persist()}}}
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;$('installBtn').hidden=false});
-async function installApp(){if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;$('installBtn').hidden=true}
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;$('installHelp').textContent='已准备好安装，点击上方按钮即可。'});
+async function installApp(){if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;return}toast('请打开 Chrome 右上角「⋮」菜单，选择「投放、保存和分享」→「安装页面为应用」；也可查看地址栏右侧的安装图标。')}
 init();
 </script></body></html>
